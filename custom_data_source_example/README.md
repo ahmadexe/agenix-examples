@@ -1,0 +1,2 @@
+# Custom Data Source
+If you feel like the out of the box options are very limited and you want to implement something of your own for the data source, maybe a serverside or some other technology like supabase you can implement the DataSource interface and build your own Data Source!
