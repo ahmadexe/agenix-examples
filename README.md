@@ -150,6 +150,7 @@ Once a tool is defined Agenix is capable enough to hit them when required, deduc
 ## Examples
 1. [Example of Multi Agent Systems Built Using Agenix](https://github.com/ahmadexe/agenix-examples/tree/main/multi_agent_system)
 2. [Basic usage of Agenix](https://github.com/ahmadexe/agenix/tree/main/example)
+3. [Using Agenix with Custom Data Store](https://github.com/ahmadexe/agenix-examples/tree/main/custom_data_source_example)
 
 ## Maintainers
 
