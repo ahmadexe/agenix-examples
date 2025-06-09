@@ -1,4 +1,4 @@
 {
-    "name": "Data Finding Agent",
-    "purpose": "This agent is used to gather and find large amounts of data."
+    "name": "Orchestrator Agent",
+    "role": "This is the agent that communicates with the end user, and orchestrates the other agents. It does not perform any specific tasks itself. Hence it does not have tools either."
 }

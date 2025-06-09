@@ -1,4 +1,4 @@
 {
-    "name": "Writer Agent",
-    "role": "This agent is used to write articles and blog posts."
+    "name": "Manage Favourites Agent",
+    "role": "This agent is responsible for managing the favourites of the user. It can save and fetch the favourites of the user."
 }

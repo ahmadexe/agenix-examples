@@ -1,12 +1,18 @@
+import 'dart:convert';
+
 import 'package:agenix/agenix.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 import 'package:multi_agent_system/firebase_options.dart';
 import 'package:multi_agent_system/services/firebase_service.dart';
+import 'package:http/http.dart' as http;
 
 Future<void> main() async {
+  await dotenv.load(fileName: ".env");
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await FirebaseService.init();
@@ -20,7 +26,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Agenix Basic Example',
+      title: 'Agenix Multi Agents Example',
       theme: ThemeData(primarySwatch: Colors.blue),
       home: const ChatbotScreen(),
     );
@@ -49,66 +55,62 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     agent = await Agent.create(
       dataStore: DataStore.firestoreDataStore(),
       llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
-      name: 'Data Finding Agent',
-      role: 'This agent is used to gather and find large amounts of data.',
+      name: 'Orchestrator Agent',
+      role:
+          'This is the agent that communicates with the end user, and orchestrates the other agents. It does not perform any specific tasks itself. Hence it does not have tools either.',
       pathToSystemData: 'assets/agent1.json',
-    );
-
-    agent.toolRegistry.registerTool(
-      FindDataTool(
-        name: 'find_data',
-        description: 'This tool should be used if the user asks to find data.',
-        parameters: [],
-      ),
     );
 
     final agent2 = await Agent.create(
       dataStore: DataStore.firestoreDataStore(),
       llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
-      name: 'Statistic Agent',
+      name: 'News Agent',
       role:
-          'These agent analyzes data using statistics, whenever large amount of data is needed to be analyzed this agent should be used.',
+          'Whenever the user needs to know about news of any kind, this agent should be used.',
       pathToSystemData: 'assets/agent2.json',
     );
 
     agent2.toolRegistry.registerTool(
-      AnalyzeDataTool(
-        name: 'analyze_data',
+      FindNewsTool(
+        name: 'fetch_news_tool',
         description:
-            'This tool should be used if the user asks to analyze data.',
-        parameters: [
-          ParameterSpecification(
-            name: 'data',
-            type: 'String',
-            description: 'The data to be analyzed.',
-            required: true,
-          ),
-        ],
+            'This tool should be used if the user asks for news. It will be used to find any type of news, like top headlines, sports news, or news in general. It searches the news from the internet.',
+        parameters: [],
       ),
     );
 
     final agent3 = await Agent.create(
       dataStore: DataStore.firestoreDataStore(),
       llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
-      name: 'Writer Agent',
-      role: 'This agent is used to write articles and blog posts.',
+      name: 'Manage Favourites Agent',
+      role:
+          'This agent is responsible for managing the favourites of the user. It can save and fetch the favourites of the user.',
       pathToSystemData: 'assets/agent3.json',
     );
 
     agent3.toolRegistry.registerTool(
-      WriteBlogTool(
-        name: 'write_article',
+      SaveFavouritesTool(
+        name: 'save_favourite_news_tool',
         description:
-            'This tool should be used if the user asks to write an article or a blog using some data.',
+            "This tool should be used to save the news that the user wants to mark as favourite. It will save the news in the database.",
         parameters: [
           ParameterSpecification(
-            name: 'analyzedData',
-            type: 'String',
+            name: 'news',
+            type: 'string',
             description:
-                'This is the analyzed and processed data that should be used to write an article.',
+                'This is the news that the user needs to save as favourite.',
             required: true,
           ),
         ],
+      ),
+    );
+
+    agent3.toolRegistry.registerTool(
+      FetchFavouriteNewsTool(
+        name: 'fetch_favourite_news_tool',
+        description:
+            "This tool should be used to fetch the favourite news of the user. It will fetch the news from the database.",
+        parameters: [],
       ),
     );
 
@@ -128,7 +130,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   Widget build(BuildContext context) {
     final TextEditingController controller = TextEditingController();
     return Scaffold(
-      appBar: AppBar(title: const Text('Agenix Basic Example')),
+      appBar: AppBar(title: const Text('Agenix Multi Agents Example')),
       body:
           !isAgentReady
               ? const Center(child: CircularProgressIndicator())
@@ -193,8 +195,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 }
 
-class FindDataTool extends Tool {
-  FindDataTool({
+class FindNewsTool extends Tool {
+  FindNewsTool({
     required super.name,
     required super.description,
     required super.parameters,
@@ -202,20 +204,40 @@ class FindDataTool extends Tool {
 
   @override
   Future<ToolResponse> run(Map<String, dynamic> params) async {
-    // Simulate a network call
-    await Future.delayed(const Duration(seconds: 2));
+    final key = dotenv.env['NEWS_API_KEY'];
+    if (key == null || key.isEmpty) {
+      throw Exception('API key not found');
+    }
+
+    final client = http.Client();
+    final uri = Uri.parse(
+      "https://newsapi.org/v2/top-headlines?country=us&apiKey=$key",
+    );
+    final response = await client.get(uri);
+    if (response.statusCode != 200) {
+      return ToolResponse(
+        toolName: name,
+        isRequestSuccessful: false,
+        message: 'Failed to fetch news: ${response.reasonPhrase}',
+      );
+    }
+
+    final Map<String, dynamic> data =
+        response.body.isNotEmpty ? jsonDecode(response.body) : {};
 
     return ToolResponse(
       toolName: name,
       isRequestSuccessful: true,
       message:
-          'Flutter is awesome! It is an open-source community-driven framework for building native, hybrid, and multi-platform apps from a single codebase.',
+          'Here are the top headlines: ${data['articles'].map((e) => e['title']).join(', ')}',
+      data: data,
+      needsFurtherReasoning: true,
     );
   }
 }
 
-class AnalyzeDataTool extends Tool {
-  AnalyzeDataTool({
+class SaveFavouritesTool extends Tool {
+  SaveFavouritesTool({
     required super.name,
     required super.description,
     required super.parameters,
@@ -223,32 +245,29 @@ class AnalyzeDataTool extends Tool {
 
   @override
   Future<ToolResponse> run(Map<String, dynamic> params) async {
-    // Simulate a network call
-    await Future.delayed(const Duration(seconds: 2));
+    final news = params['news'] as String?;
+    if (news == null || news.isEmpty) {
+      return ToolResponse(
+        toolName: name,
+        isRequestSuccessful: false,
+        message: 'I can not filter the news right now, maybe some other time?',
+      );
+    }
+
+    await FirebaseFirestore.instance.collection('favourites').add({
+      'news': news,
+    });
 
     return ToolResponse(
       toolName: name,
       isRequestSuccessful: true,
-      message:
-          '''Analyzed Data: Flutter is an open-source UI software development toolkit created by Google. It allows developers to build natively compiled applications for mobile, web, desktop, and embedded devices from a single codebase, using the Dart programming language.
-
-          Flutter uses the Skia graphics engine to render UIs, providing high performance and full control over every pixel on the screen. The framework supports a reactive and declarative programming model, similar to React, making it easier to manage state and UI changes.
-
-          As of 2025, Flutter has a strong and growing developer base with millions of users worldwide. It is widely used in both startups and enterprises. Major companies like Google, BMW, eBay, Alibaba, and Toyota use Flutter in production.
-
-          Flutter's mobile support is stable and widely adopted, while web and desktop support are now considered production-ready. Web builds still face challenges like large bundle sizes and limited SEO capabilities, but performance has improved with upcoming WebAssembly support. Desktop applications built with Flutter are increasingly being used in cross-platform scenarios.
-
-          The Dart language has matured with recent updates (Dart 3.x), adding advanced features like pattern matching, improved null safety, and better concurrency with isolates. While Dart is less mainstream than languages like JavaScript or Kotlin, it is fast, expressive, and tailored for UI development.
-
-          Flutter’s package ecosystem on pub.dev has grown to over 33,000 packages, providing support for databases, device features, and third-party services. However, some niche packages are still underdeveloped or less maintained compared to native ecosystems.
-
-          A growing trend in 2025 is the integration of Flutter with AI platforms. Tools for integrating    with Google Gemini, OpenAI, and other large language models are becoming common, enabling new types of applications such as AI chatbots, smart tools, and personalized assistants.''',
+      message: 'The news have been marked as favourite successfully!',
     );
   }
 }
 
-class WriteBlogTool extends Tool {
-  WriteBlogTool({
+class FetchFavouriteNewsTool extends Tool {
+  FetchFavouriteNewsTool({
     required super.name,
     required super.description,
     required super.parameters,
@@ -256,13 +275,13 @@ class WriteBlogTool extends Tool {
 
   @override
   Future<ToolResponse> run(Map<String, dynamic> params) async {
-    // Simulate a network call
-    await Future.delayed(const Duration(seconds: 2));
-
+    final docs =
+        await FirebaseFirestore.instance.collection('favourites').get();
+    final news = docs.docs.map((e) => e.data()['news'] as String).toList();
     return ToolResponse(
       toolName: name,
       isRequestSuccessful: true,
-      message: 'Flutter is awesome and this is an article.',
+      message: 'Here are the favourite news: ${news.join(', ')}',
     );
   }
 }

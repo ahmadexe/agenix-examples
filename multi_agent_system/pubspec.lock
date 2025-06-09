@@ -14,7 +14,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "62cd0204ca0fc1654c3084ef02772d2f2d99b896"
+      resolved-ref: "6c309a6d26955031d6e5473c3b83fe5f92355d93"
       url: "https://github.com/ahmadexe/agenix.git"
     source: git
     version: "2.1.0"
@@ -51,7 +51,7 @@ packages:
     source: hosted
     version: "1.1.2"
   cloud_firestore:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: cloud_firestore
       sha256: d25c956be5261c14bc9a69c9662de8addb308376b4b53a64469aade52e7b02f8
@@ -231,6 +231,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_dotenv:
+    dependency: "direct main"
+    description:
+      name: flutter_dotenv
+      sha256: b7c7be5cd9f6ef7a78429cabd2774d3c4af50e79cb2b7593e3d5d763ef95c61b
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.2.1"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -266,7 +274,7 @@ packages:
     source: hosted
     version: "0.4.7"
   http:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: http
       sha256: "2c11f3f94c687ee9bad77c171151672986360b2b001d109814ee7140b2cf261b"
