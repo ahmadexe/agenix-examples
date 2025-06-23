@@ -152,6 +152,27 @@ Once a tool is defined Agenix is capable enough to hit them when required, deduc
 2. [Basic usage of Agenix](https://github.com/ahmadexe/agenix/tree/main/example)
 3. [Using Agenix with Custom Data Store](https://github.com/ahmadexe/agenix-examples/tree/main/custom_data_source_example)
 
+### Multi Agents System
+A system where multiple agents are working together, these agents are capable enough of engaging each other if a task requires multiple agents working together. In the following example news agent and favourites manager agent are working together to fetcht e latest news, filter them and mark them as favourite. An orchestrator agent is delegating the tasks to other agents.
+
+
+https://github.com/user-attachments/assets/c21735cb-77ff-42e7-a131-e5cc39af2e10
+
+
+#### Workflow:
+
+
+![flow](https://github.com/user-attachments/assets/8ad9f4ac-018a-4092-bf8c-4fc72da81673)
+
+
+
+### Agentic App
+An agentic app is basically an application that is powered by an AI agent, this AI agent can perform tasks for the user in the platform, using pre defined tools. The following example shows how an agent "Lens" can have a sepcific personality, it can answer questions about the platform, perform tasks using tools, etc.
+
+
+https://github.com/user-attachments/assets/bcb56da8-4285-4661-af52-ee8dd6f31d08
+
+
 ## Maintainers
 
 - [Muhammad Ahmad](https://github.com/ahmadexe)
