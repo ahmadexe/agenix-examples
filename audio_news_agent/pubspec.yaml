@@ -37,6 +37,10 @@ dependencies:
   agenix: ^3.0.0
   speech_to_text: ^7.1.0
   flutter_tts: ^4.2.3
+  flutter_dotenv: ^5.1.0
+  http: ^1.4.0
+  firebase_core: ^3.14.0
+  firebase_auth: ^5.6.0
 
 dev_dependencies:
   flutter_test:
