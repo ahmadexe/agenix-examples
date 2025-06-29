@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -18,8 +17,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
-    initializeSpeechToText();
     super.initState();
+    initializeSpeechToText();
+    initAgent();
   }
 
   @override
@@ -35,8 +35,36 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<void> initAgent() async {
+    final apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
+    agent = await Agent.create(
+      dataStore: DataStore.firestoreDataStore(),
+      llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
+      name: 'Agent News',
+      role:
+          'This agent is responsible for finding the latest news, whenever the user asks for news of any sort, this agent find it.',
+      pathToSystemData: 'assets/agent1.json',
+    );
+
+    agent.toolRegistry.registerTool(
+      FindNewsTool(
+        name: 'find_news_tool',
+        description:
+            "This tool finds news of all sorts, whenever a user asks to find news this tool should be used.",
+        parameters: [],
+      ),
+    );
+
+    setState(() {
+      isAgentReady = true;
+    });
+  }
+
   bool isReady = false;
   final TtsService _ttsService = TtsService();
+  late final Agent agent;
+  bool isAgentReady = false;
+  bool isThinking = false;
 
   @override
   Widget build(BuildContext context) {
@@ -44,11 +72,27 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(title: const Text('Audio News Agent')),
       body: Column(
         children: [
-          if (isReady)
+          if (isThinking) const CircularProgressIndicator(),
+          if (isReady && isAgentReady)
             ElevatedButton(
               onPressed: () async {
                 final text = await SpeechToTextService().listen();
-                await _ttsService.speak(text);
+                final userMessage = AgentMessage(
+                  content: text,
+                  generatedAt: DateTime.now(),
+                  isFromAgent: false,
+                );
+                setState(() {
+                  isThinking = true;
+                });
+                final res = await agent.generateResponse(
+                  convoId: 'flutter_ai',
+                  userMessage: userMessage,
+                );
+                setState(() {
+                  isThinking = false;
+                });
+                await _ttsService.speak(res.content);
               },
               child: Text('Speak'),
             ),
