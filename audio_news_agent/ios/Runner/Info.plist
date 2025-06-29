@@ -4,6 +4,10 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>This app uses speech recognition to convert your voice into text for hands-free control and enhanced accessibility.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs access to the microphone to capture your voice for speech recognition and audio input features.</string>
 	<key>CFBundleDisplayName</key>
 	<string>Audio News Agent</string>
 	<key>CFBundleExecutable</key>
