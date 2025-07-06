@@ -23,7 +23,6 @@ class SpeechToTextService {
           }
         }
       },
-      // pauseFor: const Duration(seconds: 60),
       listenOptions: stt.SpeechListenOptions(partialResults: false),
       localeId: 'en_US',
     );

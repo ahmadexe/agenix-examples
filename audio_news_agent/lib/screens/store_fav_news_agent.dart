@@ -1,20 +1,19 @@
-import 'dart:convert';
-
 import 'package:agenix/agenix.dart';
 import 'package:audio_news_agent/services/speech_to_text.dart';
 import 'package:audio_news_agent/services/tts_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
 
-class FetchNewsAgentScreen extends StatefulWidget {
-  const FetchNewsAgentScreen({super.key});
+class StoreFavNewsAgentScreen extends StatefulWidget {
+  const StoreFavNewsAgentScreen({super.key});
 
   @override
-  State<FetchNewsAgentScreen> createState() => _FetchNewsAgentScreenState();
+  State<StoreFavNewsAgentScreen> createState() =>
+      _StoreFavNewsAgentScreenState();
 }
 
-class _FetchNewsAgentScreenState extends State<FetchNewsAgentScreen> {
+class _StoreFavNewsAgentScreenState extends State<StoreFavNewsAgentScreen> {
   final SpeechToTextService _speechService = SpeechToTextService();
   @override
   void initState() {
@@ -32,11 +31,20 @@ class _FetchNewsAgentScreenState extends State<FetchNewsAgentScreen> {
 
   bool _continueListening = false;
   bool _isListening = false;
+  bool _isFirstPass = true;
 
   Future<void> _startConversationLoop() async {
     _continueListening = true;
 
     while (_continueListening) {
+      if (_isFirstPass) {
+        await _ttsService.speak("Find me the latest news.");
+        await Future.delayed(const Duration(seconds: 12));
+
+        setState(() {
+          _isFirstPass = false;
+        });
+      }
       setState(() => _isListening = true);
 
       final result = await _speechService.listenOnce();
@@ -62,7 +70,7 @@ class _FetchNewsAgentScreenState extends State<FetchNewsAgentScreen> {
 
       await _speechService.stop();
       await _ttsService.speak(res.content);
-      await Future.delayed(const Duration(seconds: 1));
+      await Future.delayed(const Duration(seconds: 4));
     }
   }
 
@@ -78,17 +86,34 @@ class _FetchNewsAgentScreenState extends State<FetchNewsAgentScreen> {
     agent = await Agent.create(
       dataStore: DataStore.firestoreDataStore(),
       llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
-      name: 'Find News Agent',
+      name: 'Save News Agent',
       role:
-          'This agent is responsible for finding the latest news, whenever the user asks for news of any sort, this agent find it.',
-      pathToSystemData: 'assets/agent1.json',
+          'This agent is responsible for saving the users favourite news. This agent will save the news in the database, using the provided tools.',
+      pathToSystemData: 'assets/agent2.json',
     );
 
     agent.toolRegistry.registerTool(
-      FindNewsTool(
-        name: 'find_news_tool',
+      SaveFavouritesTool(
+        name: 'save_favourite_news_tool',
         description:
-            "This tool finds news of all sorts, whenever a user asks to find news this tool should be used.",
+            "This tool should be used to save the news that the user wants to mark as favourite. It will save the news in the database.",
+        parameters: [
+          ParameterSpecification(
+            name: 'news',
+            type: 'string',
+            description:
+                'This is the news that the user needs to save as favourite.',
+            required: true,
+          ),
+        ],
+      ),
+    );
+
+    agent.toolRegistry.registerTool(
+      FetchFavouriteNewsTool(
+        name: 'fetch_favourite_news_tool',
+        description:
+            "This tool should be used to fetch the favourite news of the user. It will fetch the news from the database.",
         parameters: [],
       ),
     );
@@ -107,7 +132,7 @@ class _FetchNewsAgentScreenState extends State<FetchNewsAgentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Find News Agent')),
+      appBar: AppBar(title: const Text('Favourite News Agent')),
       body: Column(
         children: [
           if (isAgentReady && isSpeechEngineReady)
@@ -124,8 +149,8 @@ class _FetchNewsAgentScreenState extends State<FetchNewsAgentScreen> {
   }
 }
 
-class FindNewsTool extends Tool {
-  FindNewsTool({
+class SaveFavouritesTool extends Tool {
+  SaveFavouritesTool({
     required super.name,
     required super.description,
     required super.parameters,
@@ -133,35 +158,43 @@ class FindNewsTool extends Tool {
 
   @override
   Future<ToolResponse> run(Map<String, dynamic> params) async {
-    final key = dotenv.env['NEWS_API_KEY'];
-    if (key == null || key.isEmpty) {
-      throw Exception('API key not found');
-    }
-
-    final client = http.Client();
-    final uri = Uri.parse(
-      "https://newsapi.org/v2/top-headlines?country=us&apiKey=$key",
-    );
-
-    final response = await client.get(uri);
-    if (response.statusCode != 200) {
+    final news = params['news'] as String?;
+    if (news == null || news.isEmpty) {
       return ToolResponse(
         toolName: name,
         isRequestSuccessful: false,
-        message: 'Failed to fetch news: ${response.reasonPhrase}',
+        message: 'I can not filter the news right now, maybe some other time?',
       );
     }
 
-    Map<String, dynamic> data =
-        response.body.isNotEmpty ? jsonDecode(response.body) : {};
+    await FirebaseFirestore.instance.collection('favourites').add({
+      'news': news,
+    });
 
     return ToolResponse(
       toolName: name,
       isRequestSuccessful: true,
-      message:
-          'Here are the top headlines: ${data['articles'].map((e) => e['title']).join(', ')}. Please filter out the news that ahmad likes and save them as favourites. After the message explicitly ask to "save the news as favourites". That means, at the end of the news you have filtered, append the message "save the news as favourites".',
-      data: data,
-      needsFurtherReasoning: true,
+      message: 'The news have been marked as favourite successfully!',
+    );
+  }
+}
+
+class FetchFavouriteNewsTool extends Tool {
+  FetchFavouriteNewsTool({
+    required super.name,
+    required super.description,
+    required super.parameters,
+  });
+
+  @override
+  Future<ToolResponse> run(Map<String, dynamic> params) async {
+    final docs =
+        await FirebaseFirestore.instance.collection('favourites').get();
+    final news = docs.docs.map((e) => e.data()['news'] as String).toList();
+    return ToolResponse(
+      toolName: name,
+      isRequestSuccessful: true,
+      message: 'Here are the favourite news: ${news.join(', ')}',
     );
   }
 }
