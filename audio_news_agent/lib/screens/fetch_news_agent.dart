@@ -7,14 +7,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class FetchNewsAgentScreen extends StatefulWidget {
+  const FetchNewsAgentScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<FetchNewsAgentScreen> createState() => _FetchNewsAgentScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _FetchNewsAgentScreenState extends State<FetchNewsAgentScreen> {
+  final SpeechToTextService _speechService = SpeechToTextService();
   @override
   void initState() {
     super.initState();
@@ -24,14 +25,51 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    SpeechToTextService().cancel();
+    _continueListening = false;
+    _speechService.cancel();
     super.dispose();
   }
 
+  bool _continueListening = false;
+  bool _isListening = false;
+
+  Future<void> _startConversationLoop() async {
+    _continueListening = true;
+
+    while (_continueListening) {
+      setState(() => _isListening = true);
+
+      final result = await _speechService.listenOnce();
+
+      setState(() {
+        _isListening = false;
+      });
+
+      if (result.trim().isEmpty) {
+        continue;
+      }
+
+      final userMessage = AgentMessage(
+        content: result,
+        generatedAt: DateTime.now(),
+        isFromAgent: false,
+      );
+
+      final res = await agent.generateResponse(
+        convoId: 'flutter_ai',
+        userMessage: userMessage,
+      );
+
+      await _speechService.stop();
+      await _ttsService.speak(res.content);
+      await Future.delayed(const Duration(seconds: 1));
+    }
+  }
+
   Future<void> initializeSpeechToText() async {
-    await SpeechToTextService().initialize();
+    await _speechService.initialize();
     setState(() {
-      isReady = true;
+      isSpeechEngineReady = true;
     });
   }
 
@@ -60,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  bool isReady = false;
+  bool isSpeechEngineReady = false;
   final TtsService _ttsService = TtsService();
   late final Agent agent;
   bool isAgentReady = false;
@@ -72,29 +110,13 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(title: const Text('Audio News Agent')),
       body: Column(
         children: [
-          if (isThinking) const CircularProgressIndicator(),
-          if (isReady && isAgentReady)
-            ElevatedButton(
-              onPressed: () async {
-                final text = await SpeechToTextService().listen();
-                final userMessage = AgentMessage(
-                  content: text,
-                  generatedAt: DateTime.now(),
-                  isFromAgent: false,
-                );
-                setState(() {
-                  isThinking = true;
-                });
-                final res = await agent.generateResponse(
-                  convoId: 'flutter_ai',
-                  userMessage: userMessage,
-                );
-                setState(() {
-                  isThinking = false;
-                });
-                await _ttsService.speak(res.content);
-              },
-              child: Text('Speak'),
+          if (isAgentReady && isSpeechEngineReady)
+            ElevatedButton.icon(
+              onPressed: _startConversationLoop,
+              icon: Icon(_isListening ? Icons.stop : Icons.mic),
+              label: Text(
+                _isListening ? 'Stop Listening' : 'Start Conversation',
+              ),
             ),
         ],
       ),
