@@ -43,13 +43,13 @@ dependencies:
   google_generative_ai: ^0.4.7
   flutter_dotenv: ^5.1.0
   http: ^1.4.0
+  google_sign_in: ^5.4.4
+  googleapis: ^14.0.0
+  googleapis_auth: ^2.0.0
 
   agenix: 
     git:
       url: https://github.com/ahmadexe/agenix.git
-  google_sign_in: ^5.4.4
-  googleapis: ^14.0.0
-  googleapis_auth: ^2.0.0
 
 dev_dependencies:
   flutter_test:
