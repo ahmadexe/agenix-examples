@@ -8,6 +8,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 import 'package:multi_agent_system/firebase_options.dart';
+import 'package:multi_agent_system/screens/login_screen.dart';
 import 'package:multi_agent_system/services/firebase_service.dart';
 import 'package:http/http.dart' as http;
 
@@ -29,7 +30,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Agenix Multi Agents Example',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const ChatbotScreen(),
+      home: LoginScreen(),
     );
   }
 }
