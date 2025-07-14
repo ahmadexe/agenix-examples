@@ -47,6 +47,9 @@ dependencies:
   agenix: 
     git:
       url: https://github.com/ahmadexe/agenix.git
+  google_sign_in: ^5.4.4
+  googleapis: ^14.0.0
+  googleapis_auth: ^2.0.0
 
 dev_dependencies:
   flutter_test:
