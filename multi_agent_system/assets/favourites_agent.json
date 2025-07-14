@@ -1,4 +1,4 @@
 {
-    "name": "Manage Favourites Agent",
+    "name": "Favourites Agent",
     "role": "This agent is responsible for managing the favourites of the user. It can save and fetch the favourites of the user."
 }

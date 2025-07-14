@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:multi_agent_system/screens/home_screen.dart';
+import 'package:multi_agent_system/screens/chat_screen.dart';
 import 'package:multi_agent_system/services/calendar_service.dart';
 import 'package:multi_agent_system/services/email_service.dart';
 import 'package:multi_agent_system/services/firebase_service.dart';
@@ -24,7 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
             if (!context.mounted) return;
             Navigator.of(
               context,
-            ).push(MaterialPageRoute(builder: (context) => HomeScreen()));
+            ).push(MaterialPageRoute(builder: (context) => ChatbotScreen()));
           },
           child: const Text('Login'),
         ),
