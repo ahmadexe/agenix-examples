@@ -35,7 +35,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     final customDataStore = Provider.of<CustomDataStore>(context);
     return Scaffold(
       backgroundColor: AppTheme.background,
-      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text(
           'Agenix Multi Agents Example',

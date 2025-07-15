@@ -5,7 +5,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:multi_agent_system/firebase_options.dart';
 import 'package:multi_agent_system/providers/agent_provider.dart';
 import 'package:multi_agent_system/providers/custom_data_store.dart';
-import 'package:multi_agent_system/screens/chat_screen.dart';
 import 'package:multi_agent_system/screens/chatbot_screen.dart';
 import 'package:multi_agent_system/screens/login_screen.dart';
 import 'package:provider/provider.dart';

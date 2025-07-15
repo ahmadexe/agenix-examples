@@ -12,36 +12,31 @@ class ChatInputField extends StatefulWidget {
 }
 
 class _ChatInputFieldState extends State<ChatInputField> {
-  static final TextEditingController _controller = TextEditingController(); // ✅ static to persist
-  final FocusNode _focusNode = FocusNode();
+  static final TextEditingController _controller = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _focusNode.requestFocus(); // optional: focus after build
-    });
-  }
-
-  @override
-  void dispose() {
-    _focusNode.dispose();
-    super.dispose();
-    // ❌ Do not dispose _controller — it's static and shared
-  }
+  bool _isSending = false;
 
   void _handleSend() {
     final text = _controller.text.trim();
-    if (text.isNotEmpty) {
-      widget.onSubmitted(text);
-      _controller.clear();
-    }
+    if (text.isEmpty || _isSending) return;
+
+    setState(() {
+      _isSending = true;
+    });
+
+    widget.onSubmitted(text);
+
+    _controller.clear();
+
+    setState(() {
+      _isSending = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: AppTheme.fieldDark,
         borderRadius: BorderRadius.circular(16),
@@ -51,7 +46,6 @@ class _ChatInputFieldState extends State<ChatInputField> {
           Expanded(
             child: TextField(
               controller: _controller,
-              focusNode: _focusNode,
               style: const TextStyle(color: Colors.white),
               cursorColor: Colors.white,
               onSubmitted: (_) => _handleSend(),
