@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
+import 'package:multi_agent_system/providers/custom_data_store.dart';
 import 'package:multi_agent_system/screens/login_screen.dart';
 import 'package:multi_agent_system/services/calendar_service.dart';
 import 'package:multi_agent_system/services/email_service.dart';
@@ -396,7 +397,8 @@ class SendEmailTool extends Tool {
     }
     try {
       final subject = await llm.generate(
-        prompt: 'Generate a subject for this email, DO NOT ADD ANYTHING IN THE RESPONSE, just the subject: ${content.trim()}',
+        prompt:
+            'Generate a subject for this email, DO NOT ADD ANYTHING IN THE RESPONSE, just the subject: ${content.trim()}',
       );
       final emailService = EmailService();
       await emailService.sendEmail(content, email, subject);
@@ -412,37 +414,5 @@ class SendEmailTool extends Tool {
         message: 'Failed to send email: $e',
       );
     }
-  }
-}
-
-class CustomDataStore extends DataStore {
-  @override
-  Future<void> deleteConversation(String conversationId, {Object? metaData}) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<List<Conversation>> getConversations(
-    String convoId, {
-    Object? metaData,
-  }) {
-    return Future.value([]);
-  }
-
-  @override
-  Future<List<AgentMessage>> getMessages(
-    String conversationId, {
-    Object? metaData,
-  }) {
-    return Future.value([]);
-  }
-
-  @override
-  Future<void> saveMessage(
-    String convoId,
-    AgentMessage msg, {
-    Object? metaData,
-  }) {
-    throw UnimplementedError();
   }
 }
