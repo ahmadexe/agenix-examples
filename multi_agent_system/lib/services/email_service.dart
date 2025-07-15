@@ -18,12 +18,12 @@ class EmailService {
     return base64Url.encode(utf8.encode(message)).replaceAll('=', '');
   }
 
-  Future<void> sendEmail() async {
+  Future<void> sendEmail(String content, String email, String subject) async {
     final gmailApi = FirebaseService.getGmailApi();
     final raw = encodeEmail(
-      to: 'muahmad710@gmail.com',
-      subject: 'Agentic Flutter Test',
-      body: 'Hello! This is an automated email using Gmail API.',
+      to: email,
+      subject: subject,
+      body: content,
     );
 
     final message = gmail.Message()..raw = raw;

@@ -3,19 +3,18 @@ import 'package:googleapis/calendar/v3.dart' as calendar;
 import 'package:multi_agent_system/services/firebase_service.dart';
 
 class CalendarService {
-  Future<void> bookEvent() async {
+  Future<void> bookEvent(String content, DateTime date) async {
     final calendarApi = FirebaseService.getCalendarApi();
 
-    final now = DateTime.now();
     final event =
         calendar.Event()
-          ..summary = 'Agentic Demo Meeting'
+          ..summary = content
           ..start = calendar.EventDateTime(
-            dateTime: now.add(const Duration(hours: 1)),
+            dateTime: date,
             timeZone: 'Asia/Karachi',
           )
           ..end = calendar.EventDateTime(
-            dateTime: now.add(const Duration(hours: 2)),
+            dateTime: date.add(const Duration(hours: 1)),
             timeZone: 'Asia/Karachi',
           );
 

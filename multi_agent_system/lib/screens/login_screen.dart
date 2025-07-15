@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:multi_agent_system/screens/chat_screen.dart';
-import 'package:multi_agent_system/services/calendar_service.dart';
-import 'package:multi_agent_system/services/email_service.dart';
 import 'package:multi_agent_system/services/firebase_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -19,8 +17,6 @@ class _LoginScreenState extends State<LoginScreen> {
         child: ElevatedButton(
           onPressed: () async {
             await FirebaseService.signInWithGoogle();
-            await EmailService().sendEmail();
-            await CalendarService().bookEvent();
             if (!context.mounted) return;
             Navigator.of(
               context,

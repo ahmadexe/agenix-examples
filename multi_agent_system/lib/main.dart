@@ -5,13 +5,11 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:multi_agent_system/firebase_options.dart';
 import 'package:multi_agent_system/screens/chat_screen.dart';
 import 'package:multi_agent_system/screens/login_screen.dart';
-import 'package:multi_agent_system/services/firebase_service.dart';
 
 Future<void> main() async {
   await dotenv.load(fileName: ".env");
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await FirebaseService.init();
 
   runApp(const MyApp());
 }
@@ -27,7 +25,9 @@ class MyApp extends StatelessWidget {
       home: StreamBuilder(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
-          if (snapshot.hasData) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const CircularProgressIndicator();
+          } else if (snapshot.hasData) {
             return const ChatbotScreen();
           } else {
             return const LoginScreen();
