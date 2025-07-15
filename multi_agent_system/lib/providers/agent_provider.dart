@@ -1,36 +1,28 @@
 import 'dart:convert';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:agenix/agenix.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:multi_agent_system/providers/custom_data_store.dart';
-import 'package:multi_agent_system/screens/login_screen.dart';
 import 'package:multi_agent_system/services/calendar_service.dart';
 import 'package:multi_agent_system/services/email_service.dart';
+import 'package:provider/provider.dart';
 
-class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key});
-
-  @override
-  State<ChatScreen> createState() => _ChatScreenState();
-}
-
-class _ChatScreenState extends State<ChatScreen> {
-  bool _isLoading = false;
-  String _response = 'Awaiting for response...';
-
-  bool isAgentReady = false;
+class AgentProvider extends ChangeNotifier {
   late final Agent agent;
-  Future<void> initAgent() async {
+  bool isAgentInitialized = false;
+
+  Future<void> initAgent(BuildContext context) async {
+    final customDataStore = Provider.of<CustomDataStore>(context);
+
     final String apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
     if (apiKey.isEmpty) {
       throw Exception('API key not found');
     }
     agent = await Agent.create(
-      dataStore: CustomDataStore(),
+      dataStore: customDataStore,
       llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
       name: 'Orchestrator Agent',
       role:
@@ -39,7 +31,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
 
     final agent2 = await Agent.create(
-      dataStore: DataStore.firestoreDataStore(),
+      dataStore: customDataStore,
       llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
       name: 'News Agent',
       role:
@@ -57,7 +49,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
 
     final agent3 = await Agent.create(
-      dataStore: DataStore.firestoreDataStore(),
+      dataStore: customDataStore,
       llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
       name: 'Manage Favourites Agent',
       role:
@@ -92,7 +84,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
 
     final agent4 = await Agent.create(
-      dataStore: DataStore.firestoreDataStore(),
+      dataStore: customDataStore,
       llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
       name: 'Email Agent',
       role:
@@ -126,7 +118,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
 
     final agent5 = await Agent.create(
-      dataStore: DataStore.firestoreDataStore(),
+      dataStore: customDataStore,
       llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
       name: 'Calendar Agent',
       role:
@@ -159,79 +151,25 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
 
-    setState(() {
-      isAgentReady = true;
-    });
+    isAgentInitialized = true;
+    notifyListeners();
   }
 
-  @override
-  void initState() {
-    super.initState();
+  bool isWriting = false;
 
-    initAgent();
-  }
+  Future<void> getReply(String prompt) async {
+    isWriting = true;
+    notifyListeners();
 
-  @override
-  Widget build(BuildContext context) {
-    final TextEditingController controller = TextEditingController();
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Agenix Multi Agents Example'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await GoogleSignIn().signOut();
-              await FirebaseAuth.instance.signOut();
-              if (!context.mounted) return;
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-              );
-            },
-          ),
-        ],
-      ),
-      body:
-          !isAgentReady
-              ? const Center(child: CircularProgressIndicator())
-              : Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    TextField(controller: controller),
-                    const SizedBox(height: 16),
-                    !_isLoading
-                        ? ElevatedButton(
-                          onPressed: () async {
-                            final userMessageRaw = controller.text;
-                            final userMessage = AgentMessage(
-                              content: userMessageRaw,
-                              generatedAt: DateTime.now(),
-                              isFromAgent: false,
-                            );
-                            setState(() {
-                              _isLoading = true;
-                            });
-                            final res = await agent.generateResponse(
-                              convoId: '1',
-                              userMessage: userMessage,
-                            );
-
-                            setState(() {
-                              _isLoading = false;
-                              _response = res.content;
-                            });
-                          },
-                          child: const Text('Send'),
-                        )
-                        : const CircularProgressIndicator(),
-
-                    const SizedBox(height: 16),
-                    Text(_response, style: const TextStyle(fontSize: 16)),
-                  ],
-                ),
-              ),
+    final userMessage = AgentMessage(
+      content: prompt,
+      generatedAt: DateTime.now(),
+      isFromAgent: false,
     );
+    await agent.generateResponse(convoId: 'convo1', userMessage: userMessage);
+
+    isWriting = false;
+    notifyListeners();
   }
 }
 

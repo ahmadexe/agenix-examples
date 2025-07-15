@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:multi_agent_system/screens/chat_screen.dart';
+import 'package:multi_agent_system/screens/chatbot_screen.dart';
 import 'package:multi_agent_system/services/firebase_service.dart';
 
 class LoginScreen extends StatefulWidget {

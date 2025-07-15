@@ -51,6 +51,7 @@ dependencies:
     git:
       url: https://github.com/ahmadexe/agenix.git
   provider: ^6.1.5
+  iconsax: ^0.0.8
 
 dev_dependencies:
   flutter_test:

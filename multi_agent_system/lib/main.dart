@@ -3,8 +3,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:multi_agent_system/firebase_options.dart';
+import 'package:multi_agent_system/providers/agent_provider.dart';
 import 'package:multi_agent_system/providers/custom_data_store.dart';
 import 'package:multi_agent_system/screens/chat_screen.dart';
+import 'package:multi_agent_system/screens/chatbot_screen.dart';
 import 'package:multi_agent_system/screens/login_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -21,11 +23,19 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => CustomDataStore(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<CustomDataStore>(
+          create: (context) => CustomDataStore(),
+        ),
+        ChangeNotifierProvider<AgentProvider>(
+          create: (context) => AgentProvider(),
+        ),
+      ],
       child: MaterialApp(
         title: 'Agenix Multi Agents Example',
         theme: ThemeData(primarySwatch: Colors.blue),
+        debugShowCheckedModeBanner: false,
         home: StreamBuilder(
           stream: FirebaseAuth.instance.authStateChanges(),
           builder: (context, snapshot) {
