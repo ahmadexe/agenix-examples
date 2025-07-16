@@ -32,6 +32,7 @@ class AgentProvider extends ChangeNotifier {
 
     final agent2 = await Agent.create(
       dataStore: customDataStore,
+
       llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
       name: 'News Agent',
       role:
@@ -50,6 +51,7 @@ class AgentProvider extends ChangeNotifier {
 
     final agent3 = await Agent.create(
       dataStore: customDataStore,
+
       llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
       name: 'Manage Favourites Agent',
       role:
@@ -83,8 +85,11 @@ class AgentProvider extends ChangeNotifier {
       ),
     );
 
-    final agent4 = await Agent.create(
+    final agent4 = await Agent.create(  
+
       dataStore: customDataStore,
+
+
       llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
       name: 'Email Agent',
       role:
@@ -119,6 +124,8 @@ class AgentProvider extends ChangeNotifier {
 
     final agent5 = await Agent.create(
       dataStore: customDataStore,
+
+
       llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
       name: 'Calendar Agent',
       role:

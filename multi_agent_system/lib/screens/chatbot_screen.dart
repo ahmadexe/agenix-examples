@@ -67,7 +67,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       child: ListView.builder(
                         itemCount:
                             customDataStore.messages["convo1"]?.length ?? 0,
-                        // reverse: true,
                         shrinkWrap: true,
                         itemBuilder: (context, index) {
                           final message =
