@@ -25,7 +25,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     super.didChangeDependencies();
     if (!_isInit) {
       Provider.of<AgentProvider>(context, listen: false).initAgent(context);
-      _isInit = true;
+      setState(() {
+        _isInit = true;
+      });
     }
   }
 

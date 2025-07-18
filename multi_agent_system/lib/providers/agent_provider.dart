@@ -15,6 +15,7 @@ class AgentProvider extends ChangeNotifier {
   bool isAgentInitialized = false;
 
   Future<void> initAgent(BuildContext context) async {
+    if (isAgentInitialized) return;
     final customDataStore = Provider.of<CustomDataStore>(context);
 
     final String apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
@@ -23,7 +24,7 @@ class AgentProvider extends ChangeNotifier {
     }
     agent = await Agent.create(
       dataStore: customDataStore,
-      llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
+      llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-2.5-flash'),
       name: 'Orchestrator Agent',
       role:
           'This is the agent that communicates with the end user, and orchestrates the other agents. It does not perform any specific tasks itself. Hence it does not have tools either.',
@@ -33,7 +34,7 @@ class AgentProvider extends ChangeNotifier {
     final agent2 = await Agent.create(
       dataStore: customDataStore,
 
-      llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
+      llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-2.5-flash'),
       name: 'News Agent',
       role:
           'Whenever the user needs to know about news of any kind, this agent should be used.',
@@ -52,7 +53,7 @@ class AgentProvider extends ChangeNotifier {
     final agent3 = await Agent.create(
       dataStore: customDataStore,
 
-      llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
+      llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-2.5-flash'),
       name: 'Manage Favourites Agent',
       role:
           'This agent is responsible for managing the favourites of the user. It can save and fetch the favourites of the user.',
@@ -90,7 +91,7 @@ class AgentProvider extends ChangeNotifier {
       dataStore: customDataStore,
 
 
-      llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
+      llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-2.5-flash'),
       name: 'Email Agent',
       role:
           'You are Ahmad\'s email agent, your purpose is to send emails to the user and fetch emails from the user.',
@@ -126,7 +127,7 @@ class AgentProvider extends ChangeNotifier {
       dataStore: customDataStore,
 
 
-      llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-1.5-flash'),
+      llm: LLM.geminiLLM(apiKey: apiKey, modelName: 'gemini-2.5-flash'),
       name: 'Calendar Agent',
       role:
           'You are Ahmad\'s calendar agent, your purpose is to book events on the calender.',
